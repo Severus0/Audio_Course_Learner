@@ -67,15 +67,17 @@ fun CourseSettingsScreen(
     fun shareTextExport() {
         isExporting = true
         scope.launch {
+            // CALL NEW FUNCTION
             val file = withContext(Dispatchers.IO) {
-                CourseExporter.createCourseJsonExport(context, course)
+                CourseExporter.createTranscriptsZipExport(context, course)
             }
             isExporting = false
             if (file != null) {
                 try {
                     val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
                     val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "application/json"
+                        // CHANGE MIME TYPE TO ZIP
+                        type = "application/zip"
                         putExtra(Intent.EXTRA_STREAM, uri)
                         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     }
@@ -120,7 +122,8 @@ fun CourseSettingsScreen(
                         ) {
                             Icon(Icons.Default.TextSnippet, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Export Text Only (JSON)")
+                            // UPDATE LABEL
+                            Text("Export Transcripts Only (ZIP)")
                         }
 
                         Spacer(Modifier.height(8.dp))
@@ -157,6 +160,13 @@ fun CourseSettingsScreen(
                         headlineContent = { Text(lesson.title) },
                         supportingContent = { Text(File(lesson.transcriptionPath).name) },
                         leadingContent = { Icon(Icons.Default.Description, null) },
+                        trailingContent = {
+                            IconButton(
+                                onClick = { CourseExporter.shareTranscriptFile(context, lesson) }
+                            ) {
+                                Icon(Icons.Default.Download, "Export Lesson")
+                            }
+                        },
                         modifier = Modifier.clickable { onEditLessonText(lesson.id) }
                     )
                     HorizontalDivider()

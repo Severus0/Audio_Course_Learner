@@ -91,6 +91,15 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     var currentLesson: Lesson? = null
         private set
 
+    var visibleAnnotations by mutableStateOf<List<Long>>(emptyList())
+        private set
+
+    var skipDurationMs: Long = 10000
+
+    // NEW: We need exact duration for calculations
+    var durationMs by mutableStateOf(0L)
+        private set
+
     private val updateProgressRunnable = object : Runnable {
         override fun run() {
             updateUIState()
@@ -162,6 +171,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
                 override fun onPlaybackStateChanged(playbackState: Int) {
                     if (playbackState == Player.STATE_READY) {
+                        durationMs = duration
                         totalTimeLabel = formatTime(duration)
                         updateUIState()
                     }
@@ -252,6 +262,9 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             } else {
                 emptyList()
             }
+
+            visibleAnnotations = annotations.map { it.timestampMs }
+
         } catch (e: Exception) {
             annotations = emptyList()
         }
@@ -455,20 +468,63 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun jumpToNextAnnotation() {
+        val player = exoPlayer ?: return
+        val currentPos = player.currentPosition
+
+        val next = annotations
+            .sortedBy { it.timestampMs }
+            .firstOrNull { it.timestampMs > currentPos + 2000 }
+
+        if (next != null) {
+            cancelInteraction()
+
+            val target = (next.timestampMs - 2000).coerceAtLeast(0)
+            player.seekTo(target)
+            updateUIState()
+        }
+    }
+
+    fun jumpToPreviousAnnotation() {
+        val player = exoPlayer ?: return
+        val currentPos = player.currentPosition
+
+        val prev = annotations
+            .filter { it.timestampMs < currentPos }
+            .maxByOrNull { it.timestampMs }
+
+        if (prev != null) {
+            cancelInteraction()
+
+            val target = (prev.timestampMs - 2000).coerceAtLeast(0)
+            player.seekTo(target)
+            updateUIState()
+        }
+    }
+
+    fun hasNextAnnotation(): Boolean {
+        val pos = getCurrentPosition()
+        return annotations.any { it.timestampMs > pos }
+    }
+
+    fun hasPreviousAnnotation(): Boolean {
+        val pos = getCurrentPosition()
+        return annotations.any { it.timestampMs < pos }
+    }
     fun skipForward() {
-        handledTimestamps.clear() // Reset history
+        handledTimestamps.clear()
         cancelInteraction()
         exoPlayer?.let {
-            it.seekTo(it.currentPosition + 10000)
+            it.seekTo(it.currentPosition + skipDurationMs)
             updateUIState()
         }
     }
 
     fun skipBack() {
-        handledTimestamps.clear() // Reset history
+        handledTimestamps.clear()
         cancelInteraction()
         exoPlayer?.let {
-            it.seekTo(it.currentPosition - 10000)
+            it.seekTo(it.currentPosition - skipDurationMs)
             updateUIState()
         }
     }

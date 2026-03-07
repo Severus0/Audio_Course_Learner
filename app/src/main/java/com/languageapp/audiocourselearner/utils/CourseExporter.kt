@@ -4,55 +4,59 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import com.languageapp.audiocourselearner.model.Course
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
+import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import android.content.Intent
+import androidx.core.content.FileProvider
+import com.languageapp.audiocourselearner.model.Lesson
 
 object CourseExporter {
 
-    // --- OPTION 1: TEXT ONLY (Safe to use Cache + Share) ---
-    fun createCourseJsonExport(context: Context, course: Course): File? {
+    // --- OPTION 1: TRANSCRIPTS ONLY ZIP (Lightweight - Safe for Cache + Share) ---
+    fun createTranscriptsZipExport(context: Context, course: Course): File? {
         return try {
-            val root = JSONObject()
-            root.put("courseName", course.name)
-            root.put("language", course.languageCode)
+            // Create a temp zip in the cache directory
+            val zipFile = File(context.cacheDir, "${course.name}_transcripts.zip")
+            val fos = FileOutputStream(zipFile)
 
-            val lessonsArray = JSONArray()
-            course.lessons.forEach { lesson ->
-                val lessonObj = JSONObject()
-                lessonObj.put("title", lesson.title)
+            ZipOutputStream(BufferedOutputStream(fos)).use { out ->
+                // 1. Add Config (Required for compatibility)
+                val configJson = JSONObject()
+                configJson.put("language", course.languageCode)
 
-                val txtFile = File(lesson.transcriptionPath)
-                if(txtFile.exists()) {
-                    lessonObj.put("content", txtFile.readText())
+                val configEntry = ZipEntry("config.json")
+                out.putNextEntry(configEntry)
+                out.write(configJson.toString(4).toByteArray())
+                out.closeEntry()
+
+                // 2. Add Text Files Only
+                val buffer = ByteArray(4096)
+
+                course.lessons.forEach { lesson ->
+                    // Only add the TXT file
+                    addFileToZip(out, File(lesson.transcriptionPath), buffer)
                 }
-                lessonsArray.put(lessonObj)
             }
-            root.put("lessons", lessonsArray)
-
-            // Save to Cache
-            val exportFile = File(context.cacheDir, "${course.name}_transcripts.json")
-            exportFile.writeText(root.toString(4))
-            exportFile
+            zipFile
         } catch (e: Exception) {
-            Log.e("CourseExporter", "JSON Export failed", e)
+            Log.e("CourseExporter", "Transcripts Export failed", e)
             null
         }
     }
 
     // --- OPTION 2: FULL ZIP (Direct Stream to URI for 900MB+ files) ---
+    // (This remains exactly the same as before)
     fun exportCourseToZip(context: Context, course: Course, targetUri: Uri): Boolean {
         return try {
-            // Write directly to the user-selected location (No intermediate temp file)
             context.contentResolver.openOutputStream(targetUri)?.use { outputStream ->
                 ZipOutputStream(BufferedOutputStream(outputStream)).use { out ->
 
-                    // 1. Config
                     val configJson = JSONObject()
                     configJson.put("language", course.languageCode)
 
@@ -61,8 +65,7 @@ object CourseExporter {
                     out.write(configJson.toString(4).toByteArray())
                     out.closeEntry()
 
-                    // 2. Files (Audio + Text)
-                    val buffer = ByteArray(4096) // Slightly larger buffer for speed
+                    val buffer = ByteArray(4096)
 
                     course.lessons.forEach { lesson ->
                         addFileToZip(out, File(lesson.audioPath), buffer)
@@ -74,6 +77,32 @@ object CourseExporter {
         } catch (e: Exception) {
             Log.e("CourseExporter", "Export failed", e)
             false
+        }
+    }
+
+    fun shareTranscriptFile(context: Context, lesson: Lesson) {
+        try {
+            val file = File(lesson.transcriptionPath)
+            if (!file.exists()) return
+
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                file
+            )
+
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, lesson.title)
+                putExtra(Intent.EXTRA_TITLE, "${lesson.title}.txt")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+
+            context.startActivity(Intent.createChooser(intent, "Share Transcript"))
+
+        } catch (e: Exception) {
+            Log.e("CourseExporter", "Share transcript failed", e)
         }
     }
 
