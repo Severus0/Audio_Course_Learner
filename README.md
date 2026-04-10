@@ -12,7 +12,9 @@ This Android application listens to your audio/video files, pauses at designated
 
 Here's a link to the data pipeline project: https://github.com/Severus0/Audio_Course_Learner_Data_Pipeline 
 
-If you are a developer interested in **Audio Processing**, **On-Device STT**, or **AI Data Pipelines**, then I welcome you to contact me to potentially solve this problem, honestly, I would consider reactivating this when the annotation and txt labelling is at least 95% accurate, where the vast majority of the expected phrases are correctly assigned, and it's just a few odd ones to fix before publishing. 
+If you are a developer interested in **Audio Processing**, **On-Device STT**, or **AI Data Pipelines**, then I welcome you to contact me to potentially solve this problem, honestly, I would consider reactivating this when the annotation and txt labelling is at least 95% accurate, where the vast majority of the expected phrases are correctly assigned, and it's just a few odd ones to fix before publishing.
+
+If you manage to solve the automatic transcription bottleneck, please open a PR or let me know. You can also join my discord for language apps I develop: https://discord.com/invite/t2zyfCq6KH
 
 ---
 
@@ -80,7 +82,16 @@ Here are a few areas that need improvement:
 
 ## 📄 License
 
-Licensed under the GNU General Public License v3.0 or later (GPLv3+).
-See the COPYING file for details.
+Licensed under the **GNU General Public License v3.0 or later (GPLv3+)**.  
+See the [COPYING](./COPYING) file for details.
 
-If you manage to solve the automatic transcription bottleneck, please open a PR or let me know. You can also join my discord for language apps I develop: https://discord.com/invite/t2zyfCq6KH
+**Author:** Seweryn Polec  
+**Contact:** sewerynpolec@gmail.com  
+
+---
+
+## Legal Notice
+
+This software is provided **“as is”**, without any express or implied warranty. In no event shall the author be held liable for any damages arising from the use of this software.
+
+© 2026 Seweryn Polec. All rights reserved.
