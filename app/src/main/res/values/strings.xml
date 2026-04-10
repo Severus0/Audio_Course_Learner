@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Audio Course Learner</string>
+
+    <!-- Player Feedback Strings -->
+    <string name="feedback_speak_now">Speak now…</string>
+    <string name="feedback_listening">Listening…</string>
+    <string name="feedback_correct">Correct!\nHeard: \"%1$s\"\nTarget: \"%2$s\"</string>
+    <string name="feedback_try_again">Try again! (Heard: %1$s)</string>
+    <string name="feedback_moving_on">Moving on… (Answer: %1$s)</string>
+
+    <!-- Error Strings -->
+    <string name="error_silence">Silence</string>
+    <string name="error_no_match">No match found</string>
+    <string name="error_no_internet">No internet</string>
+    <string name="error_generic">Error %1$d</string>
+    <string name="error_unclear">Unclear</string>
 </resources>

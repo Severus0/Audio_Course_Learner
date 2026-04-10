@@ -66,4 +66,8 @@ dependencies {
     implementation("androidx.media3:media3-session:1.2.1")
 
     implementation("me.xdrop:fuzzywuzzy:1.4.0")
+
+    implementation("androidx.media3:media3-exoplayer:1.9.2")
+    implementation("androidx.media3:media3-ui:1.9.2")
+
 }

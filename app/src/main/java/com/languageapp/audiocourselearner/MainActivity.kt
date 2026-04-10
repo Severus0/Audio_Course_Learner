@@ -15,6 +15,9 @@ import com.languageapp.audiocourselearner.data.ProgressManager
 import com.languageapp.audiocourselearner.model.Course
 import com.languageapp.audiocourselearner.ui.screens.*
 import com.languageapp.audiocourselearner.ui.theme.AudioCourseLearnerTheme
+import java.io.File
+import kotlin.text.set
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +41,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
 
 @Composable
 fun AppNavigation(isDarkTheme: Boolean, onToggleTheme: (Boolean) -> Unit) {
@@ -72,10 +77,20 @@ fun AppNavigation(isDarkTheme: Boolean, onToggleTheme: (Boolean) -> Unit) {
 
         composable("add_course") {
             AddCourseScreen(
+                existingCourses = courses, // <--- Add this parameter
                 onBackClick = { navController.popBackStack() },
                 onCourseAdded = { newCourse ->
                     courses.add(newCourse)
                     CourseRepository.saveCourses(context, courses)
+                    navController.popBackStack()
+                },
+                onCourseUpdated = { updatedCourse ->
+                    // Find and replace the course in the list
+                    val index = courses.indexOfFirst { it.id == updatedCourse.id }
+                    if (index != -1) {
+                        courses[index] = updatedCourse
+                        CourseRepository.saveCourses(context, courses)
+                    }
                     navController.popBackStack()
                 }
             )
@@ -111,7 +126,26 @@ fun AppNavigation(isDarkTheme: Boolean, onToggleTheme: (Boolean) -> Unit) {
                 CourseSettingsScreen(
                     course = course,
                     onBackClick = { navController.popBackStack() },
-                    onEditLessonText = { lessonId -> navController.navigate("raw_editor/$courseId/$lessonId") }
+                    onEditLessonText = { lessonId ->
+                        navController.navigate("raw_editor/$courseId/$lessonId")
+                    },
+                    onCourseUpdated = { updatedCourse ->
+                        val index = courses.indexOfFirst { it.id == updatedCourse.id }
+                        if (index != -1) {
+                            courses[index] = updatedCourse
+                            CourseRepository.saveCourses(context, courses)
+                        }
+                    },
+                    onDeleteCourse = { courseToDelete ->
+
+                        val courseDir = File(context.filesDir, "courses/${courseToDelete.id}")
+                        courseDir.deleteRecursively()
+
+                        courses.removeAll { it.id == courseToDelete.id }
+                        CourseRepository.saveCourses(context, courses)
+
+                        navController.popBackStack()
+                    }
                 )
             }
         }
@@ -128,5 +162,7 @@ fun AppNavigation(isDarkTheme: Boolean, onToggleTheme: (Boolean) -> Unit) {
                 )
             }
         }
+
+
     }
 }
