@@ -83,4 +83,4 @@ Here are a few areas that need improvement:
 Licensed under the GNU General Public License v3.0 or later (GPLv3+).
 See the COPYING file for details.
 
-If you manage to solve the automatic transcription bottleneck, please open a PR or let me know.
+If you manage to solve the automatic transcription bottleneck, please open a PR or let me know. You can also join my discord for language apps I develop: https://discord.com/invite/t2zyfCq6KH
